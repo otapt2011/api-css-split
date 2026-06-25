@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/split.js",
+      "use": "@vercel/node",
+      "config": {
+        "maxDuration": 30
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/split",
+      "dest": "/api/split.js",
+      "methods": ["POST", "OPTIONS"]
+    }
+  ]
+}
