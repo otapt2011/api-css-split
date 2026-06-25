@@ -1,0 +1,18 @@
+{
+  "name": "api-css-split",
+  "version": "1.0.0",
+  "description": "CSS Split API – splits CSS into 4 parts (even or property‑based)",
+  "main": "api/split.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel deploy --prod"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "vercel": "^34.0.0"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.x"
+  }
+}
