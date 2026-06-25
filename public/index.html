@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CSS Split · API‑powered 4‑way</title>
+    <title>CSS Split · API‑powered</title>
     <!-- TailwindCSS CDN -->
     <script src="https://cdn.tailwindcss.com">
     </script>
@@ -12,21 +12,11 @@
     <!-- CodeMirror -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" />
     <style>
-        body {
-            background: #f8fafc;
-        }
-        .cm-s-default .cm-comment {
-            color: #6b7280;
-        }
-        .cm-s-default .cm-string {
-            color: #0b7e6b;
-        }
-        .cm-s-default .cm-number {
-            color: #b36b00;
-        }
-        .cm-s-default .cm-atom {
-            color: #b36b00;
-        }
+        body { background: #f8fafc; }
+        .cm-s-default .cm-comment { color: #6b7280; }
+        .cm-s-default .cm-string { color: #0b7e6b; }
+        .cm-s-default .cm-number { color: #b36b00; }
+        .cm-s-default .cm-atom { color: #b36b00; }
         .CodeMirror {
             height: auto !important;
             min-height: 140px;
@@ -42,24 +32,12 @@
             min-height: 140px;
             padding: 4px 6px;
         }
-        .cm-s-default .cm-property {
-            color: #0b4f8a;
-        }
-        .cm-s-default .cm-keyword {
-            color: #a626a4;
-        }
-        .cm-s-default .cm-operator {
-            color: #a626a4;
-        }
-        .cm-s-default .cm-variable {
-            color: #0b4f8a;
-        }
-        .cm-s-default .cm-builtin {
-            color: #0b7e6b;
-        }
-        .cm-s-default .cm-tag {
-            color: #a626a4;
-        }
+        .cm-s-default .cm-property { color: #0b4f8a; }
+        .cm-s-default .cm-keyword { color: #a626a4; }
+        .cm-s-default .cm-operator { color: #a626a4; }
+        .cm-s-default .cm-variable { color: #0b4f8a; }
+        .cm-s-default .cm-builtin { color: #0b7e6b; }
+        .cm-s-default .cm-tag { color: #a626a4; }
 
         .output-panel .CodeMirror {
             min-height: 100px;
@@ -78,9 +56,7 @@
             height: 100%;
             min-height: 0;
         }
-        .output-panel .CodeMirror {
-            flex: 1;
-        }
+        .output-panel .CodeMirror { flex: 1; }
 
         .compact-btn {
             padding: 4px 10px;
@@ -92,58 +68,30 @@
             background: #f1f5f9;
             color: #1e293b;
         }
-        .compact-btn:hover {
-            background: #e2e8f0;
-        }
-        .compact-btn-primary {
-            background: #0f172a;
-            color: white;
-        }
-        .compact-btn-primary:hover {
-            background: #1e293b;
-        }
-        .compact-btn-outline {
-            background: transparent;
-            border: 1px solid #cbd5e1;
-        }
-        .compact-btn-outline:hover {
-            background: #f1f5f9;
-        }
-        .compact-btn-sm {
-            padding: 2px 8px;
-            font-size: 11px;
-        }
-        .icon-split {
-            margin-right: 4px;
-        }
+        .compact-btn:hover { background: #e2e8f0; }
+        .compact-btn-primary { background: #0f172a; color: white; }
+        .compact-btn-primary:hover { background: #1e293b; }
+        .compact-btn-outline { background: transparent; border: 1px solid #cbd5e1; }
+        .compact-btn-outline:hover { background: #f1f5f9; }
+        .compact-btn-sm { padding: 2px 8px; font-size: 11px; }
+        .icon-split { margin-right: 4px; }
 
         .spinner {
             display: inline-block;
             width: 14px;
             height: 14px;
-            border: 2px solid rgba(255, 255, 255, 0.25);
+            border: 2px solid rgba(255,255,255,0.25);
             border-top-color: white;
             border-radius: 50%;
             animation: spin 0.6s linear infinite;
         }
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        #fileInput {
-            display: none;
-        }
+        #fileInput { display: none; }
 
         @media (max-width: 640px) {
-            .CodeMirror {
-                font-size: 12px;
-                min-height: 100px;
-            }
-            .CodeMirror-scroll {
-                min-height: 100px;
-            }
+            .CodeMirror { font-size: 12px; min-height: 100px; }
+            .CodeMirror-scroll { min-height: 100px; }
         }
 
         .size-label {
@@ -152,37 +100,22 @@
             font-weight: normal;
             margin-left: 4px;
         }
-        #part1Count,
-        #part2Count,
-        #part3Count,
-        #part4Count {
-            display: none !important;
-        }
-        .size-label {
-            font-size: 8px !important;
-        }
+        #part1Count, #part2Count, #part3Count, #part4Count { display: none !important; }
+        .size-label { font-size: 8px !important; }
 
         .toggle-active {
             background: #0f172a !important;
             color: white !important;
             border-color: #0f172a !important;
         }
-        .toggle-active:hover {
-            background: #1e293b !important;
-        }
+        .toggle-active:hover { background: #1e293b !important; }
 
         .output-panel.arriving {
             animation: fadeSlide 0.3s ease-out;
         }
         @keyframes fadeSlide {
-            0% {
-                opacity: 0.4;
-                transform: translateY(6px);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            0% { opacity: 0.4; transform: translateY(6px); }
+            100% { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
@@ -274,7 +207,7 @@
             </div>
         </div>
 
-        <!-- OUTPUTS (4‑column grid) -->
+        <!-- OUTPUTS -->
         <div id="outputs" class="hidden gap-2 mt-3 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 flex-1 min-h-0">
             <!-- Panel 1 -->
             <div id="panel1" class="output-panel bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden flex flex-col min-h-0">
@@ -378,11 +311,11 @@
     </script>
 
     <script>
-        // ================================================================
-        // UI – API‑powered splitting
-        // ================================================================
         (function() {
             'use strict';
+
+            // ---- API endpoint (your deployed Vercel URL) ----
+            const API_URL = 'https://api-css-split.vercel.app/api/split';
 
             // DOM refs
             var textarea = document.getElementById('cssInput');
@@ -430,7 +363,7 @@
             var modeLabel = document.getElementById('modeLabel');
             var footerHint = document.getElementById('footerHint');
 
-            var splitMode = 'even'; // 'even' or 'property'
+            var splitMode = 'even';
             var defaultCSS = `/* comments ahoy! */
                     .hello {
                         margin: 0;
@@ -454,7 +387,6 @@
                         src: url('font.woff2');
                     }`;
 
-            // utilities
             function formatSize(bytes) {
                 if (bytes === 0) return '0 B';
                 var k = 1024;
@@ -583,7 +515,7 @@
 
                 var payload = { css: css, mode: splitMode };
 
-                fetch('/api/split', {
+                fetch(API_URL, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload),
