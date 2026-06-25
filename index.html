@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CSS Split · API‑powered</title>
+    <!-- TailwindCSS CDN -->
+    <script src="https://cdn.tailwindcss.com">
+    </script>
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <!-- CodeMirror -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" />
+    <style>
+        body { background: #f8fafc; }
+        .cm-s-default .cm-comment { color: #6b7280; }
+        .cm-s-default .cm-string { color: #0b7e6b; }
+        .cm-s-default .cm-number { color: #b36b00; }
+        .cm-s-default .cm-atom { color: #b36b00; }
+        .CodeMirror {
+            height: auto !important;
+            min-height: 140px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0;
+            padding: 2px 0;
+            flex: 1;
+        }
+        .CodeMirror-scroll {
+            min-height: 140px;
+            padding: 4px 6px;
+        }
+        .cm-s-default .cm-property { color: #0b4f8a; }
+        .cm-s-default .cm-keyword { color: #a626a4; }
+        .cm-s-default .cm-operator { color: #a626a4; }
+        .cm-s-default .cm-variable { color: #0b4f8a; }
+        .cm-s-default .cm-builtin { color: #0b7e6b; }
+        .cm-s-default .cm-tag { color: #a626a4; }
+
+        .output-panel .CodeMirror {
+            min-height: 100px;
+            border: none;
+            border-radius: 0;
+            padding: 0;
+            flex: 1;
+        }
+        .output-panel .CodeMirror-scroll {
+            min-height: 100px;
+            padding: 4px 6px;
+        }
+        .output-panel {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            min-height: 0;
+        }
+        .output-panel .CodeMirror { flex: 1; }
+
+        .compact-btn {
+            padding: 4px 10px;
+            font-size: 12px;
+            border-radius: 4px;
+            transition: all 0.15s;
+            cursor: pointer;
+            border: none;
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+        .compact-btn:hover { background: #e2e8f0; }
+        .compact-btn-primary { background: #0f172a; color: white; }
+        .compact-btn-primary:hover { background: #1e293b; }
+        .compact-btn-outline { background: transparent; border: 1px solid #cbd5e1; }
+        .compact-btn-outline:hover { background: #f1f5f9; }
+        .compact-btn-sm { padding: 2px 8px; font-size: 11px; }
+        .icon-split { margin-right: 4px; }
+
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255,255,255,0.25);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        #fileInput { display: none; }
+
+        @media (max-width: 640px) {
+            .CodeMirror { font-size: 12px; min-height: 100px; }
+            .CodeMirror-scroll { min-height: 100px; }
+        }
+
+        .size-label {
+            font-size: 10px;
+            color: #94a3b8;
+            font-weight: normal;
+            margin-left: 4px;
+        }
+        #part1Count, #part2Count, #part3Count, #part4Count { display: none !important; }
+        .size-label { font-size: 8px !important; }
+
+        .toggle-active {
+            background: #0f172a !important;
+            color: white !important;
+            border-color: #0f172a !important;
+        }
+        .toggle-active:hover { background: #1e293b !important; }
+
+        .output-panel.arriving {
+            animation: fadeSlide 0.3s ease-out;
+        }
+        @keyframes fadeSlide {
+            0% { opacity: 0.4; transform: translateY(6px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+
+<body class="flex flex-col h-screen overflow-hidden">
+
+    <!-- HEADER -->
+    <header class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-10 flex-shrink-0">
+        <div class="max-w-6xl mx-auto px-3 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-code-split text-indigo-500 text-xl"></i>
+                <h1 class="text-base font-bold text-slate-800 tracking-tight">CSS Split</h1>
+                <span class="text-[10px] font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">API</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="toggleModeBtn" class="compact-btn compact-btn-sm compact-btn-outline flex items-center gap-1.5" title="Toggle split mode">
+                    <i class="fa-solid fa-arrows-rotate text-[11px]"></i>
+                    <span id="modeLabel" class="text-xs">Even</span>
+                </button>
+                <button id="uploadBtn" class="compact-btn compact-btn-sm flex items-center gap-1.5" title="Upload .css file">
+                    <i class="fa-solid fa-upload text-[11px]"></i>
+                    <span class="hidden sm:inline text-xs">Upload</span>
+                </button>
+                <button id="pasteBtn" class="compact-btn compact-btn-sm flex items-center gap-1.5" title="Paste from clipboard">
+                    <i class="fa-regular fa-clipboard text-[11px]"></i>
+                    <span class="hidden sm:inline text-xs">Paste</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="max-w-6xl mx-auto px-3 py-4 flex-1 min-h-0 flex flex-col w-full">
+
+        <!-- INPUT -->
+        <div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden flex-shrink-0 h-1/3">
+            <div class="flex items-center justify-between px-3 py-1.5 bg-slate-50 border-b border-slate-200">
+                <span class="text-xs font-medium text-slate-600 flex items-center gap-1.5">
+                    <i class="fa-regular fa-file-lines text-slate-400"></i>
+                    Enter CSS
+                </span>
+                <span class="text-[10px] text-slate-400" id="charCount">0 chars · 0 B</span>
+            </div>
+            <div class="p-1.5">
+                <textarea id="cssInput" class="hidden">/* comments ahoy! */
+                    .hello {
+                        margin: 0;
+                        /* comment */
+                        color: #333;
+                        font-size: 16px;
+                    }
+                    /* even more comments */
+                    .example {
+                        padding: 10px 20px;
+                        background: #f0f0f0;
+                        border: 1px solid #ccc;
+                        display: flex;
+                        width: 100%;
+                        position: relative;
+                        font-family: 'Arial', sans-serif;
+                        color: #222;
+                    }
+                    @font-face {
+                        font-family: 'MyFont';
+                        src: url('font.woff2');
+                    }
+                </textarea>
+            </div>
+        </div>
+
+        <!-- ACTION ROW -->
+        <div class="flex items-center justify-between gap-3 mt-3 flex-shrink-0">
+            <div class="flex items-center gap-2">
+                <button id="splitBtn" class="compact-btn compact-btn-primary flex items-center gap-1.5 text-xs px-4 py-1.5">
+                    <i class="fa-solid fa-code-split icon-split text-[12px]"></i>
+                    <span id="splitLabel">Split!</span>
+                </button>
+                <span id="statusMsg" class="text-[11px] text-slate-400"></span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="resetBtn" class="compact-btn compact-btn-sm compact-btn-outline text-[11px] flex items-center gap-1" title="Reset to default CSS">
+                    <i class="fa-solid fa-rotate-right text-[11px]"></i>
+                    <span class="hidden xs:inline">Reset</span>
+                </button>
+                <button id="clearBtn" class="compact-btn compact-btn-sm compact-btn-outline text-[11px] flex items-center gap-1" title="Clear input &amp; outputs">
+                    <i class="fa-regular fa-trash-can text-[11px]"></i>
+                    <span class="hidden xs:inline">Clear</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- OUTPUTS -->
+        <div id="outputs" class="hidden gap-2 mt-3 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 flex-1 min-h-0">
+            <!-- Panel 1 -->
+            <div id="panel1" class="output-panel bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden flex flex-col min-h-0">
+                <div class="flex items-center justify-between px-2 py-1 bg-slate-50 border-b border-slate-200 flex-shrink-0">
+                    <span class="text-[11px] font-medium text-slate-600 flex items-center gap-1">
+                        <i class="fa-regular fa-file-code text-slate-400"></i>
+                        <span id="part1Name">part1.css</span>
+                        <span class="text-[9px] text-slate-400 font-normal ml-0.5" id="part1Count"></span>
+                        <span class="size-label" id="part1Size"></span>
+                    </span>
+                    <div class="flex items-center gap-0.5">
+                        <button class="copy-btn compact-btn compact-btn-sm compact-btn-outline text-[10px] flex items-center gap-0.5" data-target="part1Output">
+                            <i class="fa-regular fa-copy text-[10px]"></i>
+                        </button>
+                        <button class="download-btn compact-btn compact-btn-sm compact-btn-outline text-[10px] flex items-center gap-0.5" data-target="part1Output" data-filename="part1.css">
+                            <i class="fa-solid fa-download text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="part1Output" class="output-code"></div>
+            </div>
+
+            <!-- Panel 2 -->
+            <div id="panel2" class="output-panel bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden flex flex-col min-h-0">
+                <div class="flex items-center justify-between px-2 py-1 bg-slate-50 border-b border-slate-200 flex-shrink-0">
+                    <span class="text-[11px] font-medium text-slate-600 flex items-center gap-1">
+                        <i class="fa-regular fa-file-code text-slate-400"></i>
+                        <span id="part2Name">part2.css</span>
+                        <span class="text-[9px] text-slate-400 font-normal ml-0.5" id="part2Count"></span>
+                        <span class="size-label" id="part2Size"></span>
+                    </span>
+                    <div class="flex items-center gap-0.5">
+                        <button class="copy-btn compact-btn compact-btn-sm compact-btn-outline text-[10px] flex items-center gap-0.5" data-target="part2Output">
+                            <i class="fa-regular fa-copy text-[10px]"></i>
+                        </button>
+                        <button class="download-btn compact-btn compact-btn-sm compact-btn-outline text-[10px] flex items-center gap-0.5" data-target="part2Output" data-filename="part2.css">
+                            <i class="fa-solid fa-download text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="part2Output" class="output-code"></div>
+            </div>
+
+            <!-- Panel 3 -->
+            <div id="panel3" class="output-panel bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden flex flex-col min-h-0">
+                <div class="flex items-center justify-between px-2 py-1 bg-slate-50 border-b border-slate-200 flex-shrink-0">
+                    <span class="text-[11px] font-medium text-slate-600 flex items-center gap-1">
+                        <i class="fa-regular fa-file-code text-slate-400"></i>
+                        <span id="part3Name">part3.css</span>
+                        <span class="text-[9px] text-slate-400 font-normal ml-0.5" id="part3Count"></span>
+                        <span class="size-label" id="part3Size"></span>
+                    </span>
+                    <div class="flex items-center gap-0.5">
+                        <button class="copy-btn compact-btn compact-btn-sm compact-btn-outline text-[10px] flex items-center gap-0.5" data-target="part3Output">
+                            <i class="fa-regular fa-copy text-[10px]"></i>
+                        </button>
+                        <button class="download-btn compact-btn compact-btn-sm compact-btn-outline text-[10px] flex items-center gap-0.5" data-target="part3Output" data-filename="part3.css">
+                            <i class="fa-solid fa-download text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="part3Output" class="output-code"></div>
+            </div>
+
+            <!-- Panel 4 -->
+            <div id="panel4" class="output-panel bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden flex flex-col min-h-0">
+                <div class="flex items-center justify-between px-2 py-1 bg-slate-50 border-b border-slate-200 flex-shrink-0">
+                    <span class="text-[11px] font-medium text-slate-600 flex items-center gap-1">
+                        <i class="fa-regular fa-file-code text-slate-400"></i>
+                        <span id="part4Name">part4.css</span>
+                        <span class="text-[9px] text-slate-400 font-normal ml-0.5" id="part4Count"></span>
+                        <span class="size-label" id="part4Size"></span>
+                    </span>
+                    <div class="flex items-center gap-0.5">
+                        <button class="copy-btn compact-btn compact-btn-sm compact-btn-outline text-[10px] flex items-center gap-0.5" data-target="part4Output">
+                            <i class="fa-regular fa-copy text-[10px]"></i>
+                        </button>
+                        <button class="download-btn compact-btn compact-btn-sm compact-btn-outline text-[10px] flex items-center gap-0.5" data-target="part4Output" data-filename="part4.css">
+                            <i class="fa-solid fa-download text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="part4Output" class="output-code"></div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="max-w-6xl mx-auto px-3 py-1 w-full flex-shrink-0 border-t border-slate-200 flex items-center justify-between text-[9px] text-slate-300">
+        <span id="footerHint">API‑powered · even split into 4 parts</span>
+        <span>v1.0</span>
+    </footer>
+
+    <input type="file" id="fileInput" accept=".css" />
+
+    <!-- CodeMirror -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js">
+    </script>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ---- API endpoint (your deployed Vercel URL) ----
+            const API_URL = 'https://api-css-split.vercel.app/api/split';
+
+            // DOM refs
+            var textarea = document.getElementById('cssInput');
+            var splitBtn = document.getElementById('splitBtn');
+            var splitLabel = document.getElementById('splitLabel');
+            var statusMsg = document.getElementById('statusMsg');
+            var outputs = document.getElementById('outputs');
+            var partOutputs = [
+                document.getElementById('part1Output'),
+                document.getElementById('part2Output'),
+                document.getElementById('part3Output'),
+                document.getElementById('part4Output')
+            ];
+            var partNames = [
+                document.getElementById('part1Name'),
+                document.getElementById('part2Name'),
+                document.getElementById('part3Name'),
+                document.getElementById('part4Name')
+            ];
+            var partCounts = [
+                document.getElementById('part1Count'),
+                document.getElementById('part2Count'),
+                document.getElementById('part3Count'),
+                document.getElementById('part4Count')
+            ];
+            var partSizes = [
+                document.getElementById('part1Size'),
+                document.getElementById('part2Size'),
+                document.getElementById('part3Size'),
+                document.getElementById('part4Size')
+            ];
+            var panels = [
+                document.getElementById('panel1'),
+                document.getElementById('panel2'),
+                document.getElementById('panel3'),
+                document.getElementById('panel4')
+            ];
+            var charCount = document.getElementById('charCount');
+            var uploadBtn = document.getElementById('uploadBtn');
+            var fileInput = document.getElementById('fileInput');
+            var pasteBtn = document.getElementById('pasteBtn');
+            var clearBtn = document.getElementById('clearBtn');
+            var resetBtn = document.getElementById('resetBtn');
+            var toggleBtn = document.getElementById('toggleModeBtn');
+            var modeLabel = document.getElementById('modeLabel');
+            var footerHint = document.getElementById('footerHint');
+
+            var splitMode = 'even';
+            var defaultCSS = `/* comments ahoy! */
+                    .hello {
+                        margin: 0;
+                        /* comment */
+                        color: #333;
+                        font-size: 16px;
+                    }
+                    /* even more comments */
+                    .example {
+                        padding: 10px 20px;
+                        background: #f0f0f0;
+                        border: 1px solid #ccc;
+                        display: flex;
+                        width: 100%;
+                        position: relative;
+                        font-family: 'Arial', sans-serif;
+                        color: #222;
+                    }
+                    @font-face {
+                        font-family: 'MyFont';
+                        src: url('font.woff2');
+                    }`;
+
+            function formatSize(bytes) {
+                if (bytes === 0) return '0 B';
+                var k = 1024;
+                var sizes = ['B', 'KB', 'MB'];
+                var i = Math.floor(Math.log(bytes) / Math.log(k));
+                var val = (bytes / Math.pow(k, i)).toFixed(i === 0 ? 0 : 1);
+                return val + ' ' + sizes[i];
+            }
+
+            function getStringSize(str) {
+                return new Blob([str]).size;
+            }
+
+            // ---- CodeMirror for input ----
+            var editor = CodeMirror.fromTextArea(textarea, {
+                mode: 'css',
+                lineNumbers: true,
+                matchBrackets: false,
+                lineWrapping: true,
+                tabSize: 4,
+                theme: 'default',
+                viewportMargin: Infinity,
+            });
+
+            function updateCharCount() {
+                var val = editor.getValue();
+                var size = getStringSize(val);
+                charCount.textContent = val.length + ' chars · ' + formatSize(size);
+            }
+            editor.on('change', updateCharCount);
+            updateCharCount();
+
+            // ---- CodeMirror for outputs ----
+            function initOutputEditor(element) {
+                if (!element) return null;
+                if (element.CodeMirror) return element.CodeMirror;
+                var cm = CodeMirror(function(parent) {
+                    while (element.firstChild) element.removeChild(element.firstChild);
+                    element.appendChild(parent);
+                }, {
+                    mode: 'css',
+                    lineNumbers: true,
+                    matchBrackets: false,
+                    lineWrapping: true,
+                    tabSize: 4,
+                    theme: 'default',
+                    readOnly: true,
+                    viewportMargin: Infinity,
+                });
+                element.CodeMirror = cm;
+                return cm;
+            }
+
+            function setOutputValue(element, value) {
+                if (!element) return;
+                var cm = element.CodeMirror;
+                if (!cm) {
+                    cm = initOutputEditor(element);
+                }
+                if (cm) {
+                    cm.setValue(value || '');
+                    setTimeout(function() { cm.refresh(); }, 50);
+                }
+            }
+
+            // ---- Toggle Mode ----
+            toggleBtn.addEventListener('click', function() {
+                if (splitMode === 'even') {
+                    splitMode = 'property';
+                    modeLabel.textContent = 'Property';
+                    toggleBtn.classList.add('toggle-active');
+                    footerHint.textContent = 'API‑powered · property‑based split · layout · style · fonts · colors';
+                    document.querySelectorAll('.download-btn').forEach(function(btn) {
+                        var target = btn.dataset.target;
+                        if (target === 'part1Output') btn.dataset.filename = 'layout.css';
+                        else if (target === 'part2Output') btn.dataset.filename = 'style.css';
+                        else if (target === 'part3Output') btn.dataset.filename = 'fonts.css';
+                        else if (target === 'part4Output') btn.dataset.filename = 'colors.css';
+                    });
+                    partNames[0].textContent = 'layout.css';
+                    partNames[1].textContent = 'style.css';
+                    partNames[2].textContent = 'fonts.css';
+                    partNames[3].textContent = 'colors.css';
+                } else {
+                    splitMode = 'even';
+                    modeLabel.textContent = 'Even';
+                    toggleBtn.classList.remove('toggle-active');
+                    footerHint.textContent = 'API‑powered · evenly split into 4 parts';
+                    document.querySelectorAll('.download-btn').forEach(function(btn) {
+                        var target = btn.dataset.target;
+                        if (target === 'part1Output') btn.dataset.filename = 'part1.css';
+                        else if (target === 'part2Output') btn.dataset.filename = 'part2.css';
+                        else if (target === 'part3Output') btn.dataset.filename = 'part3.css';
+                        else if (target === 'part4Output') btn.dataset.filename = 'part4.css';
+                    });
+                    partNames[0].textContent = 'part1.css';
+                    partNames[1].textContent = 'part2.css';
+                    partNames[2].textContent = 'part3.css';
+                    partNames[3].textContent = 'part4.css';
+                }
+                if (editor.getValue().trim()) {
+                    splitCSS();
+                }
+            });
+
+            // ---- API Call ----
+            function splitCSS() {
+                var css = editor.getValue();
+                if (!css.trim()) {
+                    statusMsg.textContent = '⚠️ empty input';
+                    return;
+                }
+
+                // Reset outputs
+                for (var i = 0; i < 4; i++) {
+                    setOutputValue(partOutputs[i], '');
+                    partCounts[i].textContent = '';
+                    partSizes[i].textContent = '';
+                    panels[i].classList.remove('arriving');
+                }
+
+                splitBtn.disabled = true;
+                splitLabel.innerHTML = '<span class="spinner"></span>';
+                statusMsg.textContent = '📡 sending to API…';
+                outputs.classList.remove('hidden');
+
+                var payload = { css: css, mode: splitMode };
+
+                fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload),
+                    })
+                    .then(function(response) {
+                        if (!response.ok) {
+                            return response.json().then(function(errData) {
+                                throw new Error(errData.error || 'Server error (HTTP ' + response.status +
+                                ')');
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(function(data) {
+                        if (!data.success) {
+                            throw new Error(data.error || 'Unknown API error');
+                        }
+                        var parts = data.parts;
+                        if (!Array.isArray(parts) || parts.length !== 4) {
+                            throw new Error('Invalid response from API');
+                        }
+                        // Display each part
+                        for (var i = 0; i < 4; i++) {
+                            var content = parts[i] || '';
+                            setOutputValue(partOutputs[i], content);
+                            var lines = content ? content.split('\n').filter(function(l) { return l.trim(); })
+                                .length : 0;
+                            partCounts[i].textContent = '(' + lines + ' lines)';
+                            partSizes[i].textContent = '· ' + formatSize(getStringSize(content));
+                            panels[i].classList.add('arriving');
+                            setTimeout(function(idx) {
+                                return function() { panels[idx].classList.remove('arriving'); };
+                            }(i), 400);
+                        }
+                        statusMsg.textContent = '✓ done (' + parts.filter(function(p) { return p.trim(); }).length +
+                            ' non‑empty parts)';
+                        splitBtn.disabled = false;
+                        splitLabel.textContent = 'Split!';
+                    })
+                    .catch(function(error) {
+                        console.error('Split error:', error);
+                        statusMsg.textContent = '❌ ' + (error.message || 'Network or server error');
+                        splitBtn.disabled = false;
+                        splitLabel.textContent = 'Split!';
+                    });
+            }
+
+            // ---- Copy ----
+            document.querySelectorAll('.copy-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var targetId = this.dataset.target;
+                    var el = document.getElementById(targetId);
+                    if (!el) return;
+                    var text = '';
+                    if (el.CodeMirror) {
+                        text = el.CodeMirror.getValue();
+                    } else {
+                        text = el.textContent || '';
+                    }
+                    if (!text.trim()) {
+                        statusMsg.textContent = '⚠️ nothing to copy';
+                        return;
+                    }
+                    navigator.clipboard.writeText(text).then(function() {
+                        statusMsg.textContent = '✓ copied!';
+                        setTimeout(function() { statusMsg.textContent = ''; }, 1500);
+                    }).catch(function() {
+                        var ta = document.createElement('textarea');
+                        ta.value = text;
+                        document.body.appendChild(ta);
+                        ta.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(ta);
+                        statusMsg.textContent = '✓ copied!';
+                        setTimeout(function() { statusMsg.textContent = ''; }, 1500);
+                    });
+                });
+            });
+
+            // ---- Download ----
+            document.querySelectorAll('.download-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var targetId = this.dataset.target;
+                    var filename = this.dataset.filename || 'part.css';
+                    var el = document.getElementById(targetId);
+                    if (!el) return;
+                    var text = '';
+                    if (el.CodeMirror) {
+                        text = el.CodeMirror.getValue();
+                    } else {
+                        text = el.textContent || '';
+                    }
+                    if (!text.trim()) {
+                        statusMsg.textContent = '⚠️ nothing to download';
+                        return;
+                    }
+                    var blob = new Blob([text], { type: 'text/css' });
+                    var url = URL.createObjectURL(blob);
+                    var a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    statusMsg.textContent = '✓ downloaded ' + filename;
+                    setTimeout(function() { statusMsg.textContent = ''; }, 1500);
+                });
+            });
+
+            // ---- Upload ----
+            uploadBtn.addEventListener('click', function() {
+                fileInput.click();
+            });
+            fileInput.addEventListener('change', function(e) {
+                var file = this.files[0];
+                if (!file) return;
+                var reader = new FileReader();
+                reader.onload = function(ev) {
+                    var content = ev.target.result;
+                    editor.setValue(content);
+                    updateCharCount();
+                    statusMsg.textContent = '✓ loaded ' + file.name;
+                    setTimeout(function() { statusMsg.textContent = ''; }, 1500);
+                    outputs.classList.add('hidden');
+                    clearOutputs();
+                };
+                reader.readAsText(file);
+                this.value = '';
+            });
+
+            // ---- Paste ----
+            pasteBtn.addEventListener('click', function() {
+                if (!navigator.clipboard) {
+                    statusMsg.textContent = '⚠️ clipboard not available';
+                    return;
+                }
+                navigator.clipboard.readText().then(function(text) {
+                    if (text) {
+                        editor.setValue(text);
+                        updateCharCount();
+                        statusMsg.textContent = '✓ pasted from clipboard';
+                        setTimeout(function() { statusMsg.textContent = ''; }, 1500);
+                        outputs.classList.add('hidden');
+                        clearOutputs();
+                    } else {
+                        statusMsg.textContent = '⚠️ clipboard empty';
+                    }
+                }).catch(function() {
+                    statusMsg.textContent = '⚠️ cannot read clipboard';
+                });
+            });
+
+            // ---- Clear ----
+            function clearOutputs() {
+                for (var i = 0; i < 4; i++) {
+                    setOutputValue(partOutputs[i], '');
+                    partCounts[i].textContent = '';
+                    partSizes[i].textContent = '';
+                    panels[i].classList.remove('arriving');
+                }
+            }
+
+            function clearAll() {
+                editor.setValue('');
+                updateCharCount();
+                outputs.classList.add('hidden');
+                clearOutputs();
+                statusMsg.textContent = '✓ cleared';
+                setTimeout(function() { statusMsg.textContent = ''; }, 1000);
+            }
+
+            clearBtn.addEventListener('click', function() {
+                if (editor.getValue().trim() && !confirm('Clear input and outputs?')) return;
+                clearAll();
+            });
+
+            // ---- Reset ----
+            function resetToDefault() {
+                editor.setValue(defaultCSS);
+                updateCharCount();
+                setTimeout(function() { splitCSS(); }, 100);
+                statusMsg.textContent = '↺ reset to default';
+                setTimeout(function() { statusMsg.textContent = ''; }, 1500);
+            }
+
+            resetBtn.addEventListener('click', function() {
+                if (editor.getValue().trim() !== defaultCSS.trim() && !confirm('Reset to default CSS?')) return;
+                resetToDefault();
+            });
+
+            // ---- Split button ----
+            splitBtn.addEventListener('click', splitCSS);
+
+            // Keyboard shortcut
+            editor.getWrapperElement().addEventListener('keydown', function(e) {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    splitCSS();
+                }
+            });
+
+            // ---- Auto-split on load ----
+            setTimeout(function() { splitCSS(); }, 200);
+
+        })();
+    </script>
+
+</body>
+</html>
